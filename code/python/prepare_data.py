@@ -65,30 +65,14 @@ county_demo['pop_25_plus_any_college'] += county_demo['pop_25_plus_bachelors']
 county_demo['pop_25_plus_any_college'] += county_demo['pop_25_plus_graduate']
 
 county_demo['total_pop_any_college'] = county_demo['pop_18_24_any_college'] + county_demo['pop_25_plus_any_college']
-
-county_demo['total_pop_bachelors'] = county_demo['pop_18_24_bachelors'] + county_demo['pop_25_plus_bachelors']
-county_demo['total_pop_bachelors'] += county_demo['pop_25_plus_graduate']
-
 county_demo['frac_any_college'] = county_demo['total_pop_any_college'] / county_demo['total_pop']
-county_demo['frac_bachelors'] = county_demo['total_pop_bachelors'] / county_demo['total_pop']
 
 county_demo['frac_enrolled_public_college'] = county_demo['perc_enrolled_public_college'] / 100
-county_demo['total_pop_any_college_public_est'] = county_demo['frac_enrolled_public_college'] * county_demo['total_pop_any_college']
-county_demo['total_pop_bachelors_public_est'] = county_demo['frac_enrolled_public_college'] * county_demo['total_pop_bachelors']
-county_demo['frac_any_college_public_est'] = county_demo['total_pop_any_college_public_est'] / county_demo['total_pop']
-county_demo['frac_bachelors_public_est'] = county_demo['total_pop_bachelors_public_est'] / county_demo['total_pop']
-county_demo['frac_coll_coll_public_est'] = county_demo['total_pop_any_college_public_est'] / county_demo['total_pop_any_college']
-county_demo['frac_bach_bach_public_est'] = county_demo['total_pop_bachelors_public_est'] / county_demo['total_pop_bachelors']
 
 county_demo = county_demo[['county',
     'frac_any_college',
-    'frac_bachelors',
     'median_income',
-    'frac_enrolled_public_college',
-    'frac_any_college_public_est',
-    'frac_bachelors_public_est',
-    'frac_coll_coll_public_est',
-    'frac_bach_bach_public_est']]
+    'frac_enrolled_public_college']]
 
 sc_county = pd.read_csv(data / 'social_connectedness_county_county_october_2021.tsv', sep = '\t')
 sc_county['user_state_county_fips'] = sc_county['user_loc'].apply(lambda g: str(g).zfill(5))
@@ -129,12 +113,7 @@ sci_county['same_state'] = sci_county.apply(lambda r: 1 if r['user_state'] == r[
 sci_county['log_sci'] = np.log10(sci_county['scaled_sci'])
 sci_county['log_distance_miles'] = np.log10(sci_county['distance_miles'])
 sci_county['diff_frac_any_college'] = sci_county['frac_any_college_user'] - sci_county['frac_any_college_fr']
-sci_county['diff_frac_bachelors'] = sci_county['frac_bachelors_user'] - sci_county['frac_bachelors_fr']
 sci_county['diff_income'] = sci_county['median_income_user'] - sci_county['median_income_fr']
 sci_county['diff_frac_enrolled_public_college'] = sci_county['frac_enrolled_public_college_user'] - sci_county['frac_enrolled_public_college_fr']
-sci_county['diff_frac_any_college_public_est'] = sci_county['frac_any_college_public_est_user'] - sci_county['frac_any_college_public_est_fr']
-sci_county['diff_frac_bachelors_public_est'] = sci_county['frac_bachelors_public_est_user'] - sci_county['frac_bachelors_public_est_fr']
-sci_county['diff_frac_coll_coll_public_est'] = sci_county['frac_coll_coll_public_est_user'] - sci_county['frac_coll_coll_public_est_fr']
-sci_county['diff_frac_bach_bach_public_est'] = sci_county['frac_bach_bach_public_est_user'] - sci_county['frac_bach_bach_public_est_fr']
 
 sci_county.to_pickle(data / 'social_connectedness_county_demographics.pickle')
