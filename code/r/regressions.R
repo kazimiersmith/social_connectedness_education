@@ -14,7 +14,7 @@ var_labels <- c(
 	'log_distance_miles' = 'Log(distance in miles)'
 )
 	
-sci_educ <- pd$read_pickle(paste0(data, '/social_connectedness_county_demographics.pickle'))
+sci_educ <- pd$read_pickle(paste0(data, '/connectedness_county.pickle'))
 
 reg1 <- feols(log_sci ~ log_distance_miles +
 			  diff_income +
