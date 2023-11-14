@@ -1,15 +1,15 @@
 ec_county <- pd$read_pickle(paste0(data, '/ec_education_county.pickle'))
 
-reg1 <- feols(ec_county ~ frac_any_college |
+reg1 <- feols(log_ec ~ frac_any_college |
 			  state,
 		  data = ec_county)
 
-reg2 <- feols(ec_county ~ frac_any_college +
+reg2 <- feols(log_ec ~ frac_any_college +
 			  median_income |
 			  state,
 		  data = ec_county)
 
-reg3 <- feols(ec_county ~ frac_any_college +
+reg3 <- feols(log_ec ~ frac_any_college +
 			  median_income +
 			  frac_enrolled_public_college |
 			  state,

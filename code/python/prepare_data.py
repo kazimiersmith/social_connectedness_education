@@ -99,6 +99,7 @@ sci_county = pd.merge(left = sci_county,
         right_on = 'county',
         how = 'inner',
         suffixes = ('_user', '_fr'))
+sci_county = sci_county.drop(columns = ['county_user', 'county_fr', 'state_user', 'state_fr'])
 
 # Merge in county distances
 county_distances = pd.read_csv(raw / 'county_county_distance_miles_2010_nber.csv')
@@ -118,9 +119,8 @@ sci_county['diff_frac_any_college'] = sci_county['frac_any_college_user'] - sci_
 sci_county['diff_income'] = sci_county['median_income_user'] - sci_county['median_income_fr']
 sci_county['diff_frac_enrolled_public_college'] = sci_county['frac_enrolled_public_college_user'] - sci_county['frac_enrolled_public_college_fr']
 
-sci_county.to_pickle(data / 'sci_education_county_county.pickle')
-
 ec_county = pd.read_csv(raw / 'social_capital_county.csv')[['county', 'ec_county']]
+ec_county['log_ec'] = np.log10(ec_county['ec_county'])
 
 ec_county = pd.merge(left = ec_county,
         right = county_demo,
