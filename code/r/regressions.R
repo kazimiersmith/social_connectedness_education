@@ -16,3 +16,4 @@ var_labels <- c(
 )
 	
 source(paste0(regs, '/reg_sci_state_educ_public.R'))
+source(paste0(regs, '/reg_ec_educ_public.R'))

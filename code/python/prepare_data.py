@@ -71,6 +71,7 @@ county_demo['frac_any_college'] = county_demo['total_pop_any_college'] / county_
 county_demo['frac_enrolled_public_college'] = county_demo['perc_enrolled_public_college'] / 100
 
 county_demo = county_demo[['county',
+    'state',
     'frac_any_college',
     'median_income',
     'frac_enrolled_public_college']]
@@ -117,13 +118,13 @@ sci_county['diff_frac_any_college'] = sci_county['frac_any_college_user'] - sci_
 sci_county['diff_income'] = sci_county['median_income_user'] - sci_county['median_income_fr']
 sci_county['diff_frac_enrolled_public_college'] = sci_county['frac_enrolled_public_college_user'] - sci_county['frac_enrolled_public_college_fr']
 
+sci_county.to_pickle(data / 'sci_education_county_county.pickle')
+
 ec_county = pd.read_csv(raw / 'social_capital_county.csv')[['county', 'ec_county']]
 
-# Left merge here since I don't need economic connectedness for all analysis
-connectedness_county = pd.merge(left = sci_county,
-        right = ec_county,
-        left_on = 'user_county',
-        right_on = 'county',
-        how = 'left')
+ec_county = pd.merge(left = ec_county,
+        right = county_demo,
+        on = 'county',
+        how = 'inner')
 
-connectedness_county.to_pickle(data / 'connectedness_county.pickle')
+ec_county.to_pickle(data / 'ec_education_county.pickle')
