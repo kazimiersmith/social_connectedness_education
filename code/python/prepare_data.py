@@ -122,6 +122,26 @@ sci_county['diff_frac_enrolled_public_college'] = sci_county['frac_enrolled_publ
 ec_county = pd.read_csv(raw / 'social_capital_county.csv')[['county', 'ec_county']]
 ec_county['log_ec'] = np.log10(ec_county['ec_county'])
 
+# Left merge since I don't need economic connectedness for all analysis
+connectedness_county = pd.merge(left = sci_county,
+        right = ec_county,
+        left_on = 'user_county',
+        right_on = 'county',
+        how = 'left')
+
+connectedness_county = pd.merge(left = connectedness_county,
+        right = ec_county,
+        left_on = 'fr_county',
+        right_on = 'county',
+        how = 'left',
+        suffixes = ('_user', '_fr'))
+connectedness_county = connectedness_county.drop(columns = ['county_user', 'county_fr'])
+
+connectedness_county['diff_ec'] = connectedness_county['ec_county_user'] - connectedness_county['ec_county_fr']
+
+connectedness_county.to_pickle(data / 'connectedness_county.pickle')
+
+# County level data
 ec_county = pd.merge(left = ec_county,
         right = county_demo,
         on = 'county',
