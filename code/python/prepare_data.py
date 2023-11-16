@@ -150,13 +150,30 @@ ec_county = pd.merge(left = ec_county,
 
 ec_county.to_pickle(data / 'ec_education_county.pickle')
 
-# College level data
+# ----- College level data -----
+# Economic connectedness of colleges
 ec_college = pd.read_csv(raw / 'social_capital_college.csv',
-        usecols = ['college', 'college_name', 'ec_own_ses_college'])
+        usecols = ['college',
+            'college_name',
+            'ec_own_ses_college',
+            'exposure_own_ses_college',
+            'bias_own_ses_college',
+            'clustering_college',
+            'support_ratio_college',
+            'volunteering_rate_college'])
 ec_college = ec_college.rename(columns = {'ec_own_ses_college': 'ec_college',
-    'college': 'college_opeid'})
-ec_college['log_ec'] = np.log10(ec_college['ec_college'])
+    'college': 'college_opeid',
+    'exposure_own_ses_college': 'exposure',
+    'bias_own_ses_college': 'friending_bias',
+    'clustering_college': 'clustering',
+    'support_ratio_college': 'support_ratio',
+    'volunteering_rate_college': 'volunteering_rate'})
 
+ec_college['log_ec'] = np.log10(ec_college['ec_college'])
+ec_college['log_exposure'] = np.log10(ec_college['exposure'])
+ec_college['log_friending_bias'] = np.log10(1 - ec_college['friending_bias'])
+
+# College enrollment data to calculate fraction of instate freshmen
 enrollment_rename = {'UNITID': 'college_unitid',
         'EFCSTATE': 'freshmen_residence_state',
         'EFRES01': 'num_freshmen'}
@@ -177,7 +194,7 @@ college_chars = college_chars.rename(columns = chars_rename)
 college_enrollment = pd.merge(left = college_enrollment,
         right = college_chars,
         on = 'college_unitid',
-        how = 'left')
+        how = 'inner')
 
 # State code 99 is total freshmen
 total_freshmen = college_enrollment[college_enrollment['freshmen_residence_state'] == 99][['college_unitid', 'num_freshmen']]
@@ -185,7 +202,7 @@ total_freshmen = total_freshmen.rename(columns = {'num_freshmen': 'total_freshme
 college_enrollment = pd.merge(left = college_enrollment,
         right = total_freshmen,
         on = 'college_unitid',
-        how = 'left')
+        how = 'inner')
 
 college_enrollment = college_enrollment[college_enrollment['freshmen_residence_state'] == college_enrollment['college_state']]
 college_enrollment['frac_freshmen_instate'] = college_enrollment['num_freshmen'] / college_enrollment['total_freshmen']
@@ -195,9 +212,29 @@ college_instate_ec = pd.merge(left = college_enrollment,
         on = 'college_opeid',
         how = 'inner')
 
-college_instate_ec = college_instate_ec.drop(columns = ['freshmen_residence_state',
-    'num_freshmen',
-    'college_opeid',
-    'college_name'])
+# College mobility rate from Chetty et al.
+superopeid_opeid_crosswalk = pd.read_csv(raw / 'superopeid_opeid_crosswalk.csv',
+        usecols = ['super_opeid', 'opeid'])
+superopeid_opeid_crosswalk['opeid'] = superopeid_opeid_crosswalk['opeid'] * 100
 
-college_instate_ec.to_pickle(data / 'college_instate_ec.pickle')
+colleges = pd.merge(left = college_instate_ec,
+        right = superopeid_opeid_crosswalk,
+        left_on = 'college_opeid',
+        right_on = 'opeid',
+        how = 'inner')
+
+college_mobility = pd.read_csv(raw / 'college_mobility_rates.csv',
+        usecols = ['super_opeid', 'mr_kq5_pq1'])
+college_mobility = college_mobility.rename(columns = {'mr_kq5_pq1': 'mobility_rate'})
+
+colleges = pd.merge(left = colleges,
+        right = college_mobility,
+        on = 'super_opeid',
+        how = 'inner')
+colleges = colleges.drop(columns = ['freshmen_residence_state',
+    'college_opeid',
+    'college_name',
+    'super_opeid',
+    'opeid'])
+
+colleges.to_pickle(data / 'colleges.pickle')
