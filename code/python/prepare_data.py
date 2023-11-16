@@ -119,7 +119,8 @@ sci_county['diff_frac_any_college'] = sci_county['frac_any_college_user'] - sci_
 sci_county['diff_income'] = sci_county['median_income_user'] - sci_county['median_income_fr']
 sci_county['diff_frac_enrolled_public_college'] = sci_county['frac_enrolled_public_college_user'] - sci_county['frac_enrolled_public_college_fr']
 
-ec_county = pd.read_csv(raw / 'social_capital_county.csv')[['county', 'ec_county']]
+ec_county = pd.read_csv(raw / 'social_capital_county.csv',
+        usecols = ['county', 'ec_county'])
 ec_county['log_ec'] = np.log10(ec_county['ec_county'])
 
 # Left merge since I don't need economic connectedness for all analysis
@@ -148,3 +149,55 @@ ec_county = pd.merge(left = ec_county,
         how = 'inner')
 
 ec_county.to_pickle(data / 'ec_education_county.pickle')
+
+# College level data
+ec_college = pd.read_csv(raw / 'social_capital_college.csv',
+        usecols = ['college', 'college_name', 'ec_own_ses_college'])
+ec_college = ec_college.rename(columns = {'ec_own_ses_college': 'ec_college',
+    'college': 'college_opeid'})
+ec_college['log_ec'] = np.log10(ec_college['ec_college'])
+
+enrollment_rename = {'UNITID': 'college_unitid',
+        'EFCSTATE': 'freshmen_residence_state',
+        'EFRES01': 'num_freshmen'}
+
+college_enrollment = pd.read_csv(raw / 'college_enrollment_state_residence_2018.csv',
+        usecols = enrollment_rename.keys())
+college_enrollment = college_enrollment.rename(columns = enrollment_rename)
+
+chars_rename = {'UNITID': 'college_unitid',
+        'OPEID': 'college_opeid',
+        'FIPS': 'college_state'}
+
+college_chars = pd.read_csv(raw / 'college_characteristics_2018.csv',
+        encoding = 'latin_1',
+        usecols = chars_rename.keys())
+college_chars = college_chars.rename(columns = chars_rename)
+
+college_enrollment = pd.merge(left = college_enrollment,
+        right = college_chars,
+        on = 'college_unitid',
+        how = 'left')
+
+# State code 99 is total freshmen
+total_freshmen = college_enrollment[college_enrollment['freshmen_residence_state'] == 99][['college_unitid', 'num_freshmen']]
+total_freshmen = total_freshmen.rename(columns = {'num_freshmen': 'total_freshmen'})
+college_enrollment = pd.merge(left = college_enrollment,
+        right = total_freshmen,
+        on = 'college_unitid',
+        how = 'left')
+
+college_enrollment = college_enrollment[college_enrollment['freshmen_residence_state'] == college_enrollment['college_state']]
+college_enrollment['frac_freshmen_instate'] = college_enrollment['num_freshmen'] / college_enrollment['total_freshmen']
+
+college_instate_ec = pd.merge(left = college_enrollment,
+        right = ec_college,
+        on = 'college_opeid',
+        how = 'inner')
+
+college_instate_ec = college_instate_ec.drop(columns = ['freshmen_residence_state',
+    'num_freshmen',
+    'college_opeid',
+    'college_name'])
+
+college_instate_ec.to_pickle(data / 'college_instate_ec.pickle')
